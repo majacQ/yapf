@@ -16,88 +16,88 @@
 import textwrap
 import unittest
 
-from yapf.yapflib import pytree_utils
+from yapf.pytree import pytree_utils
 
 from yapftests import yapf_test_helper
 
 
 class PytreeUnwrapperTest(yapf_test_helper.YAPFTest):
 
-  def _CheckUnwrappedLines(self, uwlines, list_of_expected):
-    """Check that the given UnwrappedLines match expectations.
+  def _CheckLogicalLines(self, llines, list_of_expected):
+    """Check that the given LogicalLines match expectations.
 
     Args:
-      uwlines: list of UnwrappedLine
+      llines: list of LogicalLine
       list_of_expected: list of (depth, values) pairs. Non-semantic tokens are
         filtered out from the expected values.
     """
     actual = []
-    for uwl in uwlines:
+    for lline in llines:
       filtered_values = [
           ft.value
-          for ft in uwl.tokens
+          for ft in lline.tokens
           if ft.name not in pytree_utils.NONSEMANTIC_TOKENS
       ]
-      actual.append((uwl.depth, filtered_values))
+      actual.append((lline.depth, filtered_values))
 
     self.assertEqual(list_of_expected, actual)
 
   def testSimpleFileScope(self):
-    code = textwrap.dedent(r"""
-      x = 1
-      # a comment
-      y = 2
-      """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckUnwrappedLines(uwlines, [
+    code = textwrap.dedent("""\
+        x = 1
+        # a comment
+        y = 2
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckLogicalLines(llines, [
         (0, ['x', '=', '1']),
         (0, ['# a comment']),
         (0, ['y', '=', '2']),
     ])
 
   def testSimpleMultilineStatement(self):
-    code = textwrap.dedent(r"""
-      y = (1 +
-           x)
-      """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckUnwrappedLines(uwlines, [
+    code = textwrap.dedent("""\
+        y = (1 +
+             x)
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckLogicalLines(llines, [
         (0, ['y', '=', '(', '1', '+', 'x', ')']),
     ])
 
   def testFileScopeWithInlineComment(self):
-    code = textwrap.dedent(r"""
-      x = 1    # a comment
-      y = 2
-      """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckUnwrappedLines(uwlines, [
+    code = textwrap.dedent("""\
+        x = 1    # a comment
+        y = 2
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckLogicalLines(llines, [
         (0, ['x', '=', '1', '# a comment']),
         (0, ['y', '=', '2']),
     ])
 
   def testSimpleIf(self):
-    code = textwrap.dedent(r"""
-      if foo:
-          x = 1
-          y = 2
-      """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckUnwrappedLines(uwlines, [
+    code = textwrap.dedent("""\
+        if foo:
+            x = 1
+            y = 2
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckLogicalLines(llines, [
         (0, ['if', 'foo', ':']),
         (1, ['x', '=', '1']),
         (1, ['y', '=', '2']),
     ])
 
   def testSimpleIfWithComments(self):
-    code = textwrap.dedent(r"""
-      # c1
-      if foo: # c2
-          x = 1
-          y = 2
-      """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckUnwrappedLines(uwlines, [
+    code = textwrap.dedent("""\
+        # c1
+        if foo: # c2
+            x = 1
+            y = 2
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckLogicalLines(llines, [
         (0, ['# c1']),
         (0, ['if', 'foo', ':', '# c2']),
         (1, ['x', '=', '1']),
@@ -105,15 +105,15 @@ class PytreeUnwrapperTest(yapf_test_helper.YAPFTest):
     ])
 
   def testIfWithCommentsInside(self):
-    code = textwrap.dedent(r"""
-      if foo:
-          # c1
-          x = 1 # c2
-          # c3
-          y = 2
-      """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckUnwrappedLines(uwlines, [
+    code = textwrap.dedent("""\
+        if foo:
+            # c1
+            x = 1 # c2
+            # c3
+            y = 2
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckLogicalLines(llines, [
         (0, ['if', 'foo', ':']),
         (1, ['# c1']),
         (1, ['x', '=', '1', '# c2']),
@@ -122,17 +122,17 @@ class PytreeUnwrapperTest(yapf_test_helper.YAPFTest):
     ])
 
   def testIfElifElse(self):
-    code = textwrap.dedent(r"""
-       if x:
-         x = 1 # c1
-       elif y: # c2
-         y = 1
-       else:
-         # c3
-         z = 1
-      """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckUnwrappedLines(uwlines, [
+    code = textwrap.dedent("""\
+        if x:
+          x = 1 # c1
+        elif y: # c2
+          y = 1
+        else:
+          # c3
+          z = 1
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckLogicalLines(llines, [
         (0, ['if', 'x', ':']),
         (1, ['x', '=', '1', '# c1']),
         (0, ['elif', 'y', ':', '# c2']),
@@ -143,16 +143,16 @@ class PytreeUnwrapperTest(yapf_test_helper.YAPFTest):
     ])
 
   def testNestedCompoundTwoLevel(self):
-    code = textwrap.dedent(r"""
-       if x:
-         x = 1 # c1
-         while t:
-           # c2
-           j = 1
-         k = 1
-      """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckUnwrappedLines(uwlines, [
+    code = textwrap.dedent("""\
+        if x:
+          x = 1 # c1
+          while t:
+            # c2
+            j = 1
+          k = 1
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckLogicalLines(llines, [
         (0, ['if', 'x', ':']),
         (1, ['x', '=', '1', '# c1']),
         (1, ['while', 't', ':']),
@@ -162,33 +162,33 @@ class PytreeUnwrapperTest(yapf_test_helper.YAPFTest):
     ])
 
   def testSimpleWhile(self):
-    code = textwrap.dedent(r"""
-       while x > 1: # c1
-          # c2
-          x = 1
-      """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckUnwrappedLines(uwlines, [
+    code = textwrap.dedent("""\
+        while x > 1: # c1
+           # c2
+           x = 1
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckLogicalLines(llines, [
         (0, ['while', 'x', '>', '1', ':', '# c1']),
         (1, ['# c2']),
         (1, ['x', '=', '1']),
     ])
 
   def testSimpleTry(self):
-    code = textwrap.dedent(r"""
-      try:
-        pass
-      except:
-        pass
-      except:
-        pass
-      else:
-        pass
-      finally:
-        pass
-      """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckUnwrappedLines(uwlines, [
+    code = textwrap.dedent("""\
+        try:
+          pass
+        except:
+          pass
+        except:
+          pass
+        else:
+          pass
+        finally:
+          pass
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckLogicalLines(llines, [
         (0, ['try', ':']),
         (1, ['pass']),
         (0, ['except', ':']),
@@ -202,30 +202,30 @@ class PytreeUnwrapperTest(yapf_test_helper.YAPFTest):
     ])
 
   def testSimpleFuncdef(self):
-    code = textwrap.dedent(r"""
-      def foo(x): # c1
-        # c2
-        return x
-      """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckUnwrappedLines(uwlines, [
+    code = textwrap.dedent("""\
+        def foo(x): # c1
+          # c2
+          return x
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckLogicalLines(llines, [
         (0, ['def', 'foo', '(', 'x', ')', ':', '# c1']),
         (1, ['# c2']),
         (1, ['return', 'x']),
     ])
 
   def testTwoFuncDefs(self):
-    code = textwrap.dedent(r"""
-      def foo(x): # c1
-        # c2
-        return x
+    code = textwrap.dedent("""\
+        def foo(x): # c1
+          # c2
+          return x
 
-      def bar(): # c3
-        # c4
-        return x
-      """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckUnwrappedLines(uwlines, [
+        def bar(): # c3
+          # c4
+          return x
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckLogicalLines(llines, [
         (0, ['def', 'foo', '(', 'x', ')', ':', '# c1']),
         (1, ['# c2']),
         (1, ['return', 'x']),
@@ -235,38 +235,38 @@ class PytreeUnwrapperTest(yapf_test_helper.YAPFTest):
     ])
 
   def testSimpleClassDef(self):
-    code = textwrap.dedent(r"""
-      class Klass: # c1
-        # c2
-        p = 1
-      """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckUnwrappedLines(uwlines, [
+    code = textwrap.dedent("""\
+        class Klass: # c1
+          # c2
+          p = 1
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckLogicalLines(llines, [
         (0, ['class', 'Klass', ':', '# c1']),
         (1, ['# c2']),
         (1, ['p', '=', '1']),
     ])
 
   def testSingleLineStmtInFunc(self):
-    code = textwrap.dedent(r"""
+    code = textwrap.dedent("""\
         def f(): return 37
-      """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckUnwrappedLines(uwlines, [
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckLogicalLines(llines, [
         (0, ['def', 'f', '(', ')', ':']),
         (1, ['return', '37']),
     ])
 
   def testMultipleComments(self):
-    code = textwrap.dedent(r"""
+    code = textwrap.dedent("""\
         # Comment #1
 
         # Comment #2
         def f():
           pass
-      """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckUnwrappedLines(uwlines, [
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckLogicalLines(llines, [
         (0, ['# Comment #1']),
         (0, ['# Comment #2']),
         (0, ['def', 'f', '(', ')', ':']),
@@ -274,55 +274,55 @@ class PytreeUnwrapperTest(yapf_test_helper.YAPFTest):
     ])
 
   def testSplitListWithComment(self):
-    code = textwrap.dedent(r"""
-      a = [
-          'a',
-          'b',
-          'c',  # hello world
-      ]
-      """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckUnwrappedLines(uwlines, [(0, [
+    code = textwrap.dedent("""\
+        a = [
+            'a',
+            'b',
+            'c',  # hello world
+        ]
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckLogicalLines(llines, [(0, [
         'a', '=', '[', "'a'", ',', "'b'", ',', "'c'", ',', '# hello world', ']'
     ])])
 
 
 class MatchBracketsTest(yapf_test_helper.YAPFTest):
 
-  def _CheckMatchingBrackets(self, uwlines, list_of_expected):
+  def _CheckMatchingBrackets(self, llines, list_of_expected):
     """Check that the tokens have the expected matching bracket.
 
     Arguments:
-      uwlines: list of UnwrappedLine.
+      llines: list of LogicalLine.
       list_of_expected: list of (index, index) pairs. The matching brackets at
         the indexes need to match. Non-semantic tokens are filtered out from the
         expected values.
     """
     actual = []
-    for uwl in uwlines:
+    for lline in llines:
       filtered_values = [(ft, ft.matching_bracket)
-                         for ft in uwl.tokens
+                         for ft in lline.tokens
                          if ft.name not in pytree_utils.NONSEMANTIC_TOKENS]
       if filtered_values:
         actual.append(filtered_values)
 
     for index, bracket_list in enumerate(list_of_expected):
-      uwline = actual[index]
+      lline = actual[index]
       if not bracket_list:
-        for value in uwline:
+        for value in lline:
           self.assertIsNone(value[1])
       else:
         for open_bracket, close_bracket in bracket_list:
-          self.assertEqual(uwline[open_bracket][0], uwline[close_bracket][1])
-          self.assertEqual(uwline[close_bracket][0], uwline[open_bracket][1])
+          self.assertEqual(lline[open_bracket][0], lline[close_bracket][1])
+          self.assertEqual(lline[close_bracket][0], lline[open_bracket][1])
 
   def testFunctionDef(self):
     code = textwrap.dedent("""\
         def foo(a, b=['w','d'], c=[42, 37]):
           pass
-        """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckMatchingBrackets(uwlines, [
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckMatchingBrackets(llines, [
         [(2, 20), (7, 11), (15, 19)],
         [],
     ])
@@ -332,9 +332,9 @@ class MatchBracketsTest(yapf_test_helper.YAPFTest):
         @bar()
         def foo(a, b, c):
           pass
-        """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckMatchingBrackets(uwlines, [
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckMatchingBrackets(llines, [
         [(2, 3)],
         [(2, 8)],
         [],
@@ -344,9 +344,9 @@ class MatchBracketsTest(yapf_test_helper.YAPFTest):
     code = textwrap.dedent("""\
         class A(B, C, D):
           pass
-        """)
-    uwlines = yapf_test_helper.ParseAndUnwrap(code)
-    self._CheckMatchingBrackets(uwlines, [
+    """)
+    llines = yapf_test_helper.ParseAndUnwrap(code)
+    self._CheckMatchingBrackets(llines, [
         [(2, 8)],
         [],
     ])
